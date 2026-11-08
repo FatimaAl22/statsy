@@ -57,3 +57,23 @@ def load_csv_summary(file_name):
 if __name__ == "__main__":
     # Small manual test: run this file directly to see the result.
     print(load_csv_summary("grades.csv"))
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "load_csv_summary",
+            "description": "Summarize a CSV file: return its column names, row count, and which columns are numeric. Use this first whenever the user asks what data is available, which columns exist, how many rows there are, or before analyzing the file, so you know the exact column names. The data file for this project is grades.csv.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_name": {
+                        "type": "string",
+                        "description": "The name of the CSV file to read. Use \"grades.csv\" unless the user names a different file.",
+                    }
+                },
+                "required": ["file_name"],
+            },
+        },
+    },
+]
