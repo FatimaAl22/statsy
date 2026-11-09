@@ -185,4 +185,30 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculate_stat",
+            "description": "Calculate a statistic for a column of numbers in a CSV file. The column must contain only numbers. Returns the statistic, the column it was calculated from, and how many rows were used. If the column has no numbers, or there is only one row, the statistic cannot be calculated and an error is returned.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "stat": {
+                        "type": "string",
+                        "enum": ["mean", "median", "std", "min", "max"],
+                        "description": "The statistic to calculate. One of 'mean', 'median', 'std', 'min', 'max'.",
+                    },
+                    "column": {
+                        "type": "string",
+                        "description": "The exact column name. Must be one of the numeric columns: 'math', 'science' or 'hours_studied'. Use only the bare name, for example 'math', not 'math score'.",
+                    },
+                    "file_name": {
+                        "type": "string",
+                        "description": "The name of the CSV file to read. Use \"grades.csv\" unless the user names a different file.",
+                    },
+                },
+                "required": ["stat", "column"],
+            },
+        },
+    },
 ]
