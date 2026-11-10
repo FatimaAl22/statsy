@@ -41,13 +41,18 @@ def tool_error(message):
     return json.dumps({"error": message})
 
 
-def run_tool(name, raw_arguments):
+def run_tool(name, raw_arguments, on_tool_call=None):
     """Run one tool by name from a raw JSON argument string. Never raises.
 
     Returns the JSON string that should be handed back as the tool result.
+    `on_tool_call(name, raw_arguments)` is called too, so a UI can display it.
     """
     # Step 7: always show the call, even when the arguments will not parse.
     print(f"[tool call] {name}({raw_arguments})")
+
+    # Step 7b: let an optional caller (the Streamlit app) know a tool ran.
+    if on_tool_call is not None:
+        on_tool_call(name, raw_arguments)
 
     # Step 4: look the function up, and report unknown names instead of crashing.
     function = TOOL_FUNCTIONS.get(name)
@@ -72,9 +77,9 @@ def run_tool(name, raw_arguments):
     return json.dumps(result)
 
 
-def run_tool_call(tool_call):
+def run_tool_call(tool_call, on_tool_call=None):
     """Run one API tool call and return (tool_call_id, content) for the tool message."""
-    content = run_tool(tool_call.function.name, tool_call.function.arguments)
+    content = run_tool(tool_call.function.name, tool_call.function.arguments, on_tool_call)
     return tool_call.id, content
 
 
@@ -103,10 +108,11 @@ def extract_tool_request(text):
     return payload["name"], parameters
 
 
-def ask_model(client, messages):
+def ask_model(client, messages, on_tool_call=None):
     """Call the model, run any tools it asks for, and return the final reply.
 
     Handles both real tool_calls and tool requests written as plain text.
+    `on_tool_call(name, raw_arguments)` is passed through to run_tool.
     """
     for _ in range(MAX_TOOL_ROUNDS):
         # Step 3: send the conversation plus the tool descriptions.
@@ -130,7 +136,7 @@ def ask_model(client, messages):
             name, parameters = request
 
             # Step 2: run it through the shared runner, so prints and errors match.
-            result = run_tool(name, json.dumps(parameters))
+            result = run_tool(name, json.dumps(parameters), on_tool_call)
 
             if name in TOOL_FUNCTIONS:
                 # Step 3: do not store the model's text, just feed back the result.
@@ -152,7 +158,7 @@ def ask_model(client, messages):
 
         # Step 4: answer every call, then loop so the model can use those results.
         for tool_call in message.tool_calls:
-            tool_call_id, content = run_tool_call(tool_call)
+            tool_call_id, content = run_tool_call(tool_call, on_tool_call)
             messages.append(
                 {
                     "role": "tool",
